@@ -5,8 +5,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-USERNAME = 'your_username'   # Replace with dummy Instagram username
-PASSWORD = 'your_password'   # Replace with dummy Instagram password
+USERNAME = 'selenium.bot.demo1'   # Replace with dummy Instagram username
+PASSWORD = 'Selenium@12345'   # Replace with dummy Instagram password
 TARGET_USER = 'cbitosc'
 
 # Setup Chrome options
