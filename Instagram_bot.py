@@ -1,82 +1,83 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
-USERNAME = 'selenium.bot.demo1'  # Use a dummy account
-PASSWORD = 'Selenium@12345'
-TARGET_USER = 'cbitosc'
+def automate_instagram_search_and_follow():
+    """
+    Automates the process of logging into Instagram, searching for cbitosc,
+    and following the account, while extracting data into a text file.
+    """
 
-# Setup Chrome options
-options = webdriver.ChromeOptions()
-options.add_argument("--start-maximized")
+    # --- Replace with your dummy account credentials ---
+    username = "your_dummy_username"
+    password = "your_dummy_password"
 
-# Initialize driver
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-
-def login():
-    driver.get("https://www.instagram.com/accounts/login/")
-    time.sleep(5)
-
-    user_input = driver.find_element(By.NAME, "username")
-    pass_input = driver.find_element(By.NAME, "password")
-
-    user_input.send_keys(USERNAME)
-    pass_input.send_keys(PASSWORD)
-    pass_input.send_keys(Keys.ENTER)
-    time.sleep(8)
-
-    # Dismiss "Save Info" popup
-    try:
-        not_now = driver.find_element(By.XPATH, "//button[contains(text(), 'Not Now')]")
-        not_now.click()
-        time.sleep(3)
-    except:
-        pass
-
-def search_and_follow():
-    driver.get(f"https://www.instagram.com/{TARGET_USER}/")
-    time.sleep(6)
+    # --- Initialize the webdriver (Chrome in this example) ---
+    driver = webdriver.Chrome()  # You might need to specify the path to your chromedriver
+    driver.get("https://www.instagram.com/")
 
     try:
-        follow_button = driver.find_element(By.XPATH, "//button[contains(text(), 'Follow')]")
+        # --- Login ---
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "username"))
+        ).send_keys(username)
+        driver.find_element(By.NAME, "password").send_keys(password)
+        driver.find_element(By.XPATH, "//button[@type='submit']").click()
+
+
+        # --- Handle "Save Your Login Info?" popup ---
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//button[text()='Not Now']"))
+        ).click()
+
+        # --- Handle "Turn on Notifications?" popup ---
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//button[text()='Not Now']"))
+        ).click()
+
+        # --- Search for cbitosc ---
+        search_box = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//input[@placeholder='Search']"))
+        )
+        search_box.send_keys("cbitosc")
+        search_box.send_keys(Keys.RETURN)
+        time.sleep(2)  # Allow time for search results to load
+
+        # --- Select the first search result (cbitosc) ---
+        first_result = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//a[contains(@href, '/cbitosc/')]"))
+        )
+        first_result.click()
+
+        # --- Follow cbitosc ---
+        follow_button = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//button[text()='Follow']"))
+        )
         follow_button.click()
-        print("Followed the user.")
-        time.sleep(3)
-    except:
-        print("Already following or button not found.")
 
-def extract_data():
-    time.sleep(3)
-    
-    # Bio text is inside the header section
-    try:
-        bio = driver.find_element(By.XPATH, "//div[@class='_aa_c']//div[@class='_aacl _aaco _aacw _aacx _aad7 _aade']").text
-    except:
-        bio = "Bio not found"
+        # --- Extract data (example: post count) ---
+        time.sleep(2) # Wait for the page to load with the data
+        post_count_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//span[@class='_ac2a']"))
+        )
+        post_count = post_count_element.text
+        print(f"Post count: {post_count}")
 
-    # Stats: posts, followers, following
-    try:
-        stats = driver.find_elements(By.XPATH, "//ul[@class='_aa_7']/li/div/span")
-        posts = stats[0].text
-        followers = stats[1].get_attribute("title") or stats[1].text
-        following = stats[2].text
-    except:
-        posts, followers, following = "N/A", "N/A", "N/A"
+        # --- Save extracted data to a text file ---
+        with open("cbitosc_data.txt", "w") as f:
+            f.write(f"Post Count: {post_count}\n")
+        
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-    with open("profile_info.txt", "w", encoding="utf-8") as f:
-        f.write(f"Username: {TARGET_USER}\n")
-        f.write(f"Bio: {bio}\n")
-        f.write(f"Posts: {posts}\n")
-        f.write(f"Followers: {followers}\n")
-        f.write(f"Following: {following}\n")
+    finally:
+        # --- Close the browser ---
+        driver.quit()
 
-    print("Profile data saved to profile_info.txt")
+
 
 if __name__ == "__main__":
-    login()
-    search_and_follow()
-    extract_data()
-    driver.quit()
+    automate_instagram_search_and_follow()
